@@ -16,6 +16,9 @@ getHumanByteSize(){
 PrintSubDirectorySizes(){
   cd "$2"
 
+  hasFirstFolderRan="false"
+  totalFolderSize=0
+
   echo "FOLDER Sizes:"
   echo "============="
   while read -r folder; do
@@ -30,7 +33,49 @@ PrintSubDirectorySizes(){
 
     humanReportSize=`getHumanByteSize $sizeDu`
     padding=".............." #https://fabianlee.org/2021/06/09/bash-using-printf-to-display-fixed-width-padded-string/
-    echo "($humanReportSize   ) | "$(printf "%s%s" "$sizeDu" "${padding:${#sizeDu}}")" | $fileName"
+    percentPadding="..."
+    if [ "$hasFirstFolderRan" = "false" ]; then
+      totalFolderSize=$sizeDu
+
+      # if totalFolderSize is less than or equal to 0, then set totalFolderSize to 1
+      if [ $totalFolderSize -le 0 ]; then
+        totalFolderSize=1
+      fi
+
+      # echo "[DEBUG] Total Size: "$totalFolderSize
+
+      hasFirstFolderRan="true"
+      echo "($humanReportSize   ) | "$(printf "%s%s" "$sizeDu" "${padding:${#sizeDu}}")" | 100.0% | $fileName"
+      echo "--------------------------------------------------------------------------------"
+    else
+      # calculate percent and with standard formatting
+      percentOfTotalTemp=`echo "scale=2; $sizeDu / $totalFolderSize * 100" | bc`
+      percentOfTotal=$percentOfTotalTemp
+      #percentOfTotalTempPretty=$(printf %.2f $percentOfTotalTemp )
+      # percentOfTotal=$percentOfTotalTempPretty
+
+      # if percentOfTotal is less than 10.0, then pad 0
+      if [ "$humanReportSize" == "0    B" ]; then
+          percentOfTotal="00.00"
+      elif (( $(echo "$percentOfTotalTemp < 10.0" |bc -l) )); then
+
+        if (( $(echo "$percentOfTotalTemp > 0.00000" |bc -l) )); then
+            percentOfTotal="0$percentOfTotalTemp"
+
+        else
+            percentOfTotal=">1.00"
+        fi
+      # else
+      #   percentOfTotal=">1.00"
+      fi
+
+      # if (( $(echo "$percentOfTotalTempPretty < 10.0" |bc -l) )); then
+      #   percentOfTotal="0$percentOfTotalTempPretty"
+      # fi
+
+
+      echo "($humanReportSize   ) | "$(printf "%s%s" "$sizeDu" "${padding:${#sizeDu}}")" | $percentOfTotal% | $fileName"
+    fi
   done < <(find $searchFolder -maxdepth 1 -type d) #ignore .
 }
 
