@@ -14,13 +14,9 @@ getHumanByteSize(){
 }
 
 function CalcPercentTotal(){
-  # percentOfTotal="0"
   percentOfTotalTemp=`echo "scale=2; $1 / $2 * 100" | bc`
   percentOfTotal=$percentOfTotalTemp
-  #percentOfTotalTempPretty=$(printf %.2f $percentOfTotalTemp )
-  # percentOfTotal=$percentOfTotalTempPretty
 
-  # if percentOfTotal is less than 10.0, then pad 0
   if [ "$humanReportSize" == "0    B" ]; then
       percentOfTotal="00.00"
   elif (( $(echo "$percentOfTotalTemp < 10.0" |bc -l) )); then
@@ -61,24 +57,20 @@ PrintSubDirectorySizes(){
     if [ "$hasFirstFolderRan" = "false" ]; then
       totalFolderSize=$sizeDu
 
-      # if totalFolderSize is less than or equal to 0, then set totalFolderSize to 1
       if [ $totalFolderSize -le 0 ]; then
         totalFolderSize=1
       fi
-
-      # echo "[DEBUG] Total Size: "$totalFolderSize
 
       hasFirstFolderRan="true"
       echo "($humanReportSize   ) | "$(printf "%s%s" "$sizeDu" "${padding:${#sizeDu}}")" | 100.0% | $fileName"
       echo "--------------------------------------------------------------------------------"
     else
       runningFolderCount=$((runningFolderCount+sizeDu))
-      # calculate percent and with standard formatting
       percentOfTotal=`CalcPercentTotal "$sizeDu" "$totalFolderSize"`
 
       echo "($humanReportSize   ) | "$(printf "%s%s" "$sizeDu" "${padding:${#sizeDu}}")" | $percentOfTotal% | $fileName"
     fi
-  done < <(find $searchFolder -maxdepth 1 -type d) #ignore .
+  done < <(find $searchFolder -maxdepth 1 -type d)
 
   echo "--------------------------------------------------------------------------------"
   humanReportSize=`getHumanByteSize $runningFolderCount`
@@ -97,7 +89,4 @@ if [ "$1" == "folders" ]; then
 else
   echo "[ERROR] Please re-run with option 'folders'! (I don't understand '$1')"
   echo "        Ex: $0 folders <path>"
-
-  # echo "[ERROR] Please re-run with option 'folders' or 'files'! (I don't understand '$1')"
-  # echo "        Ex: $0 files <path>"
 fi
