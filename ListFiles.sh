@@ -18,9 +18,10 @@ PrintSubDirectorySizes(){
 
   hasFirstFolderRan="false"
   totalFolderSize=0
+  runningFolderCount=0
 
-  echo "FOLDER Sizes:"
-  echo "============="
+  echo "FOLDER ($2) Sizes:"
+  echo "================================================================================"
   while read -r folder; do
     reportLine=`du -s "$folder" 2>/dev/null | sort -n`
 
@@ -48,6 +49,7 @@ PrintSubDirectorySizes(){
       echo "($humanReportSize   ) | "$(printf "%s%s" "$sizeDu" "${padding:${#sizeDu}}")" | 100.0% | $fileName"
       echo "--------------------------------------------------------------------------------"
     else
+      runningFolderCount=$((runningFolderCount+sizeDu))
       # calculate percent and with standard formatting
       percentOfTotalTemp=`echo "scale=2; $sizeDu / $totalFolderSize * 100" | bc`
       percentOfTotal=$percentOfTotalTemp
@@ -77,6 +79,12 @@ PrintSubDirectorySizes(){
       echo "($humanReportSize   ) | "$(printf "%s%s" "$sizeDu" "${padding:${#sizeDu}}")" | $percentOfTotal% | $fileName"
     fi
   done < <(find $searchFolder -maxdepth 1 -type d) #ignore .
+
+  echo "--------------------------------------------------------------------------------"
+  humanReportSize=`getHumanByteSize $runningFolderCount`
+  echo "($humanReportSize   ) | "$(printf "%s%s" "$runningFolderCount" "${padding:${#runningFolderCount}}")" | XXX.0% | $fileName"
+  
+
 }
 
 if [ "$1" == "folders" ]; then
