@@ -31,7 +31,7 @@ PrintSubDirectorySizes(){
     humanReportSize=`getHumanByteSize $sizeDu`
     padding=".............." #https://fabianlee.org/2021/06/09/bash-using-printf-to-display-fixed-width-padded-string/
     echo "($humanReportSize   ) | "$(printf "%s%s" "$sizeDu" "${padding:${#sizeDu}}")" | $fileName"
-  done < <(find $searchFolder -maxdepth 1 ! -path . -type d) #ignore .
+  done < <(find $searchFolder -maxdepth 1 -type d) #ignore .
 }
 
 if [ "$1" == "folders" ]; then
