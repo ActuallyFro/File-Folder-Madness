@@ -13,6 +13,29 @@ getHumanByteSize(){
         {gsub(/^[0-9]+/, human($1)); print}'
 }
 
+function CalcPercentTotal(){
+  # percentOfTotal="0"
+  percentOfTotalTemp=`echo "scale=2; $1 / $2 * 100" | bc`
+  percentOfTotal=$percentOfTotalTemp
+  #percentOfTotalTempPretty=$(printf %.2f $percentOfTotalTemp )
+  # percentOfTotal=$percentOfTotalTempPretty
+
+  # if percentOfTotal is less than 10.0, then pad 0
+  if [ "$humanReportSize" == "0    B" ]; then
+      percentOfTotal="00.00"
+  elif (( $(echo "$percentOfTotalTemp < 10.0" |bc -l) )); then
+
+    if (( $(echo "$percentOfTotalTemp > 0.00000" |bc -l) )); then
+        percentOfTotal="0$percentOfTotalTemp"
+
+    else
+        percentOfTotal="<1.00"
+    fi
+  fi
+
+  echo "$percentOfTotal"
+}
+
 PrintSubDirectorySizes(){
   cd "$2"
 
@@ -51,30 +74,7 @@ PrintSubDirectorySizes(){
     else
       runningFolderCount=$((runningFolderCount+sizeDu))
       # calculate percent and with standard formatting
-      percentOfTotalTemp=`echo "scale=2; $sizeDu / $totalFolderSize * 100" | bc`
-      percentOfTotal=$percentOfTotalTemp
-      #percentOfTotalTempPretty=$(printf %.2f $percentOfTotalTemp )
-      # percentOfTotal=$percentOfTotalTempPretty
-
-      # if percentOfTotal is less than 10.0, then pad 0
-      if [ "$humanReportSize" == "0    B" ]; then
-          percentOfTotal="00.00"
-      elif (( $(echo "$percentOfTotalTemp < 10.0" |bc -l) )); then
-
-        if (( $(echo "$percentOfTotalTemp > 0.00000" |bc -l) )); then
-            percentOfTotal="0$percentOfTotalTemp"
-
-        else
-            percentOfTotal=">1.00"
-        fi
-      # else
-      #   percentOfTotal=">1.00"
-      fi
-
-      # if (( $(echo "$percentOfTotalTempPretty < 10.0" |bc -l) )); then
-      #   percentOfTotal="0$percentOfTotalTempPretty"
-      # fi
-
+      percentOfTotal=`CalcPercentTotal "$sizeDu" "$totalFolderSize"`
 
       echo "($humanReportSize   ) | "$(printf "%s%s" "$sizeDu" "${padding:${#sizeDu}}")" | $percentOfTotal% | $fileName"
     fi
@@ -82,9 +82,10 @@ PrintSubDirectorySizes(){
 
   echo "--------------------------------------------------------------------------------"
   humanReportSize=`getHumanByteSize $runningFolderCount`
-  echo "($humanReportSize   ) | "$(printf "%s%s" "$runningFolderCount" "${padding:${#runningFolderCount}}")" | XXX.0% | $fileName"
-  
+  percentOfTotal=`CalcPercentTotal "$runningFolderCount" "$totalFolderSize"`
 
+  echo "($humanReportSize   ) | "$(printf "%s%s" "$runningFolderCount" "${padding:${#runningFolderCount}}")" | Subfolders account for: $percentOfTotal% of space used"
+  
 }
 
 if [ "$1" == "folders" ]; then
